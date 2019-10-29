@@ -1,17 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Net;
-using System.Net.Http;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using CriptoExchengLib.Abstract;
 using CriptoExchengLib.Interfaces;
-using Nancy.Json;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace CriptoExchengLib.Classes

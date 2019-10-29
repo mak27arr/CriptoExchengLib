@@ -1,57 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Collections.Specialized;
 using CriptoExchengLib.Interfaces;
 using Newtonsoft.Json.Linq;
-using System.Linq;
-using System.Collections.Specialized;
-using System.Reflection;
 
 namespace CriptoExchengLib.Classes
 {
-    class BitfinexCryptoExchenge : ICryptoExchenge
+    class KrakenCryptoExchenge : ICryptoExchenge
     {
-        private string base_url;
-        private string abase_url;
         public string Username { get; set; }
         public string Password { get; set; }
         public string LastErrorInfo { get; set; }
 
-        public BitfinexCryptoExchenge()
+        private string base_url;
+
+        public KrakenCryptoExchenge()
         {
-            base_url = "https://api-pub.bitfinex.com/v2/{0}";
-            abase_url = "https://api.bitfinex.com/v2/{0}";
+            base_url = "https://api.kraken.com/0/{0}";
         }
 
         public bool CanselOrder(int order_id)
         {
-            if (Username == null || Password == null)
-            {
-                LastErrorInfo = "Not Autorizated";
-                return false;
-            }
-            WebConector wc = new WebConector();
-            string api_name = "auth/w/order/cancel";
-            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
-            string nonce = ((long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds).ToString();
-            string body_jsonstr = "{id:" + order_id + "}";
-            string data_for_encript = "/api/" + api_name + nonce.ToString() + body_jsonstr;
-            heder.Add(new Tuple<string, string>("bfx-apikey", Username));
-            heder.Add(new Tuple<string, string>("bfx-signature", SignatureHelper.Sign(Password, data_for_encript,384)));
-            heder.Add(new Tuple<string, string>("bfx-nonce", nonce));
-
-            string jsonRezalt = wc.ReqwestPostAsync(string.Format(abase_url, api_name), heder, body_jsonstr).Result;
-            var jsonRezaltArray = JObject.Parse(jsonRezalt);
-            if (jsonRezaltArray["error"] != null)
-            {
-                LastErrorInfo = "";
-                //return Int32.Parse(jsonRezaltArray["order_id"].ToString());
-            }
-            else
-            {
-                LastErrorInfo = jsonRezaltArray["error"].ToString();
-                //return -1;
-            }
             throw new NotImplementedException();
         }
 
@@ -59,7 +28,7 @@ namespace CriptoExchengLib.Classes
         {
             throw new NotImplementedException();
         }
-        //
+
         public List<BaseBookWarrant> GetBookWarrants(List<BaseCurrencyPair> pairs, int limit)
         {
             if (pairs.Count > 1)
@@ -68,53 +37,53 @@ namespace CriptoExchengLib.Classes
                 return new List<BaseBookWarrant>();
             }
             WebConector wc = new WebConector();
-            string api_name = "book/";
+            string api_name = "public/Depth?pair=";
             foreach (ICurrencyPair pair in pairs)
             {
                 api_name += pair.PairName;
             }
-            api_name += "/P0";
-            if (limit == 25 || limit == 100)
+            if (limit > 0 && limit <= 1000)
             {
-                api_name += "?len=" + limit.ToString();
+                api_name += "&count=" + limit.ToString();
             }
             string jsonRezalt = wc.ReqwestGetAsync(string.Format(base_url, api_name), new List<Tuple<string, string>>(), "").Result;
-            var jsonRezaltArray = JArray.Parse(jsonRezalt);
+            var jsonRezaltArray = JObject.Parse(jsonRezalt);
+            var books_json = JObject.Parse(jsonRezaltArray["result"].ToString());
             List<BaseBookWarrant> rezalt = new List<BaseBookWarrant>();
-            if (jsonRezaltArray.Count > 0)
+            if (books_json.Count > 0)
             {
-                foreach (var cp in jsonRezaltArray)
+                foreach (ICurrencyPair cp in pairs)
                 {
-                    BaseBookWarrant bookWarrant = new BaseBookWarrant();
-                    bookWarrant.Name = pairs.First().PairName;
-                    var buff = JArray.Parse(cp.ToString()).ToObject<double[]>();
-                    bookWarrant.Ask_amount = buff[2];
-                    bookWarrant.Ask_quantity = buff[1];
-                    bookWarrant.Ask_top = buff[0];
-                    rezalt.Add(bookWarrant);
+                        JToken jwarant = books_json[cp.PairName];
+                        var jasks = JArray.Parse(jwarant["asks"].ToString());
+                        var jbids = JArray.Parse(jwarant["bids"].ToString());
+                        BaseBookWarrant bookWarrant = new BaseBookWarrant();
+                        bookWarrant.Name = cp.PairName;
+                        bookWarrant.Ask = JArray.Parse(jasks.ToString()).ToObject<double[,]>();
+                        bookWarrant.Bid = JArray.Parse(jbids.ToString()).ToObject<double[,]>();
+                        rezalt.Add(bookWarrant); 
                 }
             }
 
             return rezalt;
         }
-        //
+
         public List<BaseCurrencyPair> GetCurrencyPair()
         {
             WebConector wc = new WebConector();
-            string api_name = "/conf/pub:list:pair:exchange";
+            string api_name = "public/AssetPairs";
             string jsonRezalt = wc.ReqwestGetAsync(string.Format(base_url, api_name), new List<Tuple<string, string>>(), "").Result;
-            var jsonRezaltArray = JArray.Parse(jsonRezalt);
+            var jsonRezaltArray = JObject.Parse(jsonRezalt);
             List<BaseCurrencyPair> rezalt = new List<BaseCurrencyPair>();
 
             if (jsonRezaltArray.Count > 0)
             {
-                foreach (var cp_json in jsonRezaltArray) { 
-                    foreach (var cp_j in JArray.Parse(cp_json.ToString()))
-                    {
-                        BaseCurrencyPair cp = new BaseCurrencyPair(cp_j.ToString());
-                        rezalt.Add(cp);
-                    }
-            }
+                var pair_json = JObject.Parse(jsonRezaltArray["result"].ToString());
+                foreach (var cp_json in pair_json)
+                {
+                    BaseCurrencyPair cp = new BaseCurrencyPair(cp_json.Key);
+                    rezalt.Add(cp);
+                }
             }
             return rezalt;
         }
@@ -133,28 +102,24 @@ namespace CriptoExchengLib.Classes
         {
             throw new NotImplementedException();
         }
-//        let signature = `/api/${apiPath}${nonce}${JSON.stringify(body)}` 
-//const sig = CryptoJS.HmacSHA384(signature, apiSecret).toString()
 
         public int PostOrder(IOrder order)
         {
             if (Username == null || Password == null)
                 return -1;
             WebConector wc = new WebConector();
-            string api_name = "auth/w/order/submit";
+            string api_name = "private/AddOrder";
             List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
             string nonce = ((long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds).ToString();
-            string body_jsonstr = "{type:'" + order.Type.Value + "',symbol:'" + order.Pair + "',price:'" + order.Price + "',amount:'" + order.Amount + "',flags:0}";
-            string data_for_encript = "/api/" + api_name + nonce.ToString() + body_jsonstr;
-            heder.Add(new Tuple<string, string>("bfx-apikey", Username));
-            heder.Add(new Tuple<string, string>("bfx-signature", SignatureHelper.Sign(Password, data_for_encript,384)));
-            heder.Add(new Tuple<string, string>("bfx-nonce", nonce));
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            string data_for_encript = "nonce=" + nonce + ;
+            heder.Add(new Tuple<string, string>("API-Sign", SignatureHelper.Sign(Password, data_for_encript)));
 
-           // var body = this.ToNameValue(order);
-            //body.Add("bfx-nonce", nonce);
-            string jsonRezalt = wc.ReqwestPostAsync(string.Format(abase_url, api_name), heder, body_jsonstr).Result;
+            var body = this.ToNameValue(order);
+            body.Add("nonce", nonce);
+            string jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, body).Result;
             var jsonRezaltArray = JObject.Parse(jsonRezalt);
-            if (jsonRezaltArray["error"] != null)
+            if (jsonRezaltArray["result"].ToString() == "true")
             {
                 LastErrorInfo = "";
                 return Int32.Parse(jsonRezaltArray["order_id"].ToString());

@@ -19,15 +19,44 @@ namespace CriptoExchengLib.Classes
             }
         }
 
-        public static string Sign(string key, string message)
+        public static string Sign(string key, string message,int signature_bit = 512)
         {
             if (key == null || message == null || key.Length == 0)
                 return "";
-            using (HMACSHA512 hmac = new HMACSHA512(Encoding.UTF8.GetBytes(key)))
+
+            if (signature_bit == 512)
             {
-                byte[] b = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
-                return ByteToString(b);
+                using (var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(key)))
+                {
+                    byte[] b = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+                    return ByteToString(b);
+                }
             }
+            if(signature_bit == 384)
+            {
+                using (var hmac = new HMACSHA384(Encoding.UTF8.GetBytes(key)))
+                {
+                    byte[] b = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+                    return ByteToString(b);
+                }
+            }
+            if (signature_bit == 256)
+            {
+                using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
+                {
+                    byte[] b = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+                    return ByteToString(b);
+                }
+            }
+            if (signature_bit == 1)
+            {
+                using (var hmac = new HMACSHA1(Encoding.UTF8.GetBytes(key)))
+                {
+                    byte[] b = hmac.ComputeHash(Encoding.UTF8.GetBytes(message));
+                    return ByteToString(b);
+                }
+            }
+            return "";
         }
 
         private static string ByteToString(byte[] buff)
@@ -40,5 +69,6 @@ namespace CriptoExchengLib.Classes
             }
             return (sbinary).ToLowerInvariant();
         }
+
     }
 }
