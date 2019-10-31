@@ -182,16 +182,32 @@ namespace CriptoExchengLib.Classes
 
             WebConector wc = new WebConector();
             string api_name = "private/CancelOrder";
+            //List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            //string nonce = ((long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds).ToString();
+            //heder.Add(new Tuple<string, string>("API-Key", Username));
+            //string data_for_encript = "nonce=" + nonce + "&txid=" + order_id;
+            //data_for_encript = SignatureHelper.ComputeSha256Hash(data_for_encript);
+            //heder.Add(new Tuple<string, string>("API-Sign", Convert.ToBase64String(Encoding.UTF8.GetBytes(SignatureHelper.Sign(Password, (string.Format("0/", api_name) + data_for_encript), 512).ToCharArray()))));
+
+            // generate a 64 bit nonce using a timestamp at tick resolution
+            Int64 nonce = DateTime.Now.Ticks;
+            var props = "nonce=" + nonce + "&txid=" + order_id;
+            string path = string.Format(base_url, "0/private/api_name");
             List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
-            string nonce = ((long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds).ToString();
             heder.Add(new Tuple<string, string>("API-Key", Username));
-            string data_for_encript = "nonce=" + nonce + "&txid=" + order_id;
-            data_for_encript = SignatureHelper.ComputeSha256Hash(data_for_encript);
-            heder.Add(new Tuple<string, string>("API-Sign", Convert.ToBase64String(Encoding.UTF8.GetBytes(SignatureHelper.Sign(Password, (string.Format("0/", api_name) + data_for_encript), 512).ToCharArray()))));
+            byte[] base64DecodedSecred = Convert.FromBase64String(Password);
+            var np = nonce + Convert.ToChar(0) + props;
+            var pathBytes = Encoding.UTF8.GetBytes(path);
+            var hash256Bytes = SignatureHelper.Sha256_hash(np);
+            var z = new byte[pathBytes.Length + hash256Bytes.Length];
+            pathBytes.CopyTo(z, 0);
+            hash256Bytes.CopyTo(z, pathBytes.Length);
+            var signature = SignatureHelper.Sign(base64DecodedSecred, z);
+            heder.Add(new Tuple<string, string>("API-Sign", Convert.ToBase64String(signature)));
+            string jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, props).Result;
 
             QueryPrivate("CancelOrder", "&txid=" + order_id);
 
-            string jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, "txid=" + order_id).Result;
             var jsonRezaltArray = JObject.Parse(jsonRezalt);
             if (jsonRezaltArray["result"].ToString() == "true")
             {
@@ -257,14 +273,20 @@ namespace CriptoExchengLib.Classes
             var np = nonce + Convert.ToChar(0) + props;
 
             var pathBytes = Encoding.UTF8.GetBytes(path);
-            var hash256Bytes = sha256_hash(np);
+            var hash256Bytes = SignatureHelper.Sha256_hash(np);
             var z = new byte[pathBytes.Length + hash256Bytes.Length];
             pathBytes.CopyTo(z, 0);
             hash256Bytes.CopyTo(z, pathBytes.Length);
 
-            var signature = getHash(base64DecodedSecred, z);
+            var signature = SignatureHelper.Sign(base64DecodedSecred, z);
 
             webRequest.Headers.Add("API-Sign", Convert.ToBase64String(signature));
+
+            WebConector wc = new WebConector();
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            heder.Add(new Tuple<string, string>("API-Sign", Convert.ToBase64String(signature)));
+           var rezzzz =  wc.ReqwestPostAsync(address,heder, props).Result;
 
             if (props != null)
             {
