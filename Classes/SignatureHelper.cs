@@ -59,6 +59,48 @@ namespace CriptoExchengLib.Classes
             return "";
         }
 
+        public static byte[] Sign(byte[] keyByte, byte[] messageBytes)
+        {
+            using (var hmacsha512 = new HMACSHA512(keyByte))
+            {
+
+                return hmacsha512.ComputeHash(messageBytes);
+
+            }
+        }
+
+        public static string ComputeSha256Hash(string rawData)
+        {
+            // Create a SHA256   
+            using (SHA256 sha256Hash = SHA256.Create())
+            {
+                // ComputeHash - returns byte array  
+                byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+
+                // Convert byte array to a string   
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    builder.Append(bytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
+
+
+
+        public static byte[] Sha256_hash(String value)
+        {
+            using (SHA256 hash = SHA256Managed.Create())
+            {
+                Encoding enc = Encoding.UTF8;
+
+                Byte[] result = hash.ComputeHash(enc.GetBytes(value));
+
+                return result;
+            }
+        }
+
         private static string ByteToString(byte[] buff)
         {
             string sbinary = "";
