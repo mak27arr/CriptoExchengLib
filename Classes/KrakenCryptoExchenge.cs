@@ -29,6 +29,7 @@ namespace CriptoExchengLib.Classes
             api_version = "0";
         }
 
+        //Kraken not suport get input info 
         public List<BaseAccount> GetAccountsList()
         {
             if (Username == null || Password == null)
@@ -36,7 +37,6 @@ namespace CriptoExchengLib.Classes
                 LastErrorInfo = "Not Autorizated";
                 return null;
             }
-            throw new NotImplementedException();
             WebConector wc = new WebConector();
             string api_name = "private/Balance";
             Int64 nonce = DateTime.Now.Ticks;
@@ -47,19 +47,22 @@ namespace CriptoExchengLib.Classes
             heder.Add(new Tuple<string, string>("API-Sign", signature));
 
             var jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
-            var jsonRezaltArray = JArray.Parse(jsonRezalt);
+            var jsonRezaltArray = JObject.Parse(jsonRezalt);
             if (jsonRezaltArray["error"] == null)
             {
                 LastErrorInfo = "";
-                BaseOrderStatus bos = BaseOrderStatus.Exsist;
-                return null;
+                List<BaseAccount> rezalt = new List<BaseAccount>();
+                foreach (var record in jsonRezaltArray)
+                {
+                    rezalt.Add(new BaseAccount(record.Key,double.Parse(record.Value.ToString())));
+                }
+                return rezalt;
             }
             else
             {
                 LastErrorInfo = jsonRezaltArray["error"].ToString();
                 return null;
             }
-            throw new NotImplementedException();
         }
 
         public List<BaseBookWarrant> GetBookWarrants(List<BaseCurrencyPair> pairs, int limit)
@@ -123,7 +126,77 @@ namespace CriptoExchengLib.Classes
 
         public List<BaseHistoryRecord> GetHistoryRecords(DateTime dateTime)
         {
-            throw new NotImplementedException();
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return null;
+            }
+            List<BaseHistoryRecord> rezalt = new List<BaseHistoryRecord>();
+            WebConector wc = new WebConector();
+            string api_name = "private/WithdrawStatus";
+            Int64 nonce = DateTime.Now.Ticks;
+            string data_transmit = string.Format("nonce={0}", nonce);
+            var signature = SignatureFormat(api_name, data_transmit, nonce);
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            heder.Add(new Tuple<string, string>("API-Sign", signature));
+            var jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
+            var jsonRezaltArray = JArray.Parse(jsonRezalt);
+            if (jsonRezaltArray["error"] == null)
+            {
+                LastErrorInfo = "";
+                foreach (var record in jsonRezaltArray.Children<JObject>())
+                {
+                    BaseHistoryRecord bhr = new BaseHistoryRecord();
+                    bhr.Time = UnixTimestampToDateTime(double.Parse(record["time"].ToString()));
+                    bhr.Type = "Withdraw";
+                    bhr.Id = int.Parse(record["refid"].ToString());
+                    bhr.Currency = "";
+                    bhr.Status = record["status"].ToString();
+                    bhr.Provaider = record["info "].ToString();
+                    bhr.Amount = record["amount"].ToString();
+                    bhr.Account = "";
+                    bhr.Txit = record["txid"].ToString();
+                }
+                
+            }
+            else
+            {
+                LastErrorInfo = jsonRezaltArray["error"].ToString();
+                return null;
+            }
+            api_name = "private/DepositStatus";
+            nonce = DateTime.Now.Ticks;
+            data_transmit = string.Format("nonce={0}", nonce);
+            signature = SignatureFormat(api_name, data_transmit, nonce);
+            heder = new List<Tuple<string, string>>();
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            heder.Add(new Tuple<string, string>("API-Sign", signature));
+            jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
+            jsonRezaltArray = JArray.Parse(jsonRezalt);
+            if (jsonRezaltArray["error"] == null)
+            {
+                foreach (var record in jsonRezaltArray.Children<JObject>())
+                {
+                    BaseHistoryRecord bhr = new BaseHistoryRecord();
+                    bhr.Time = UnixTimestampToDateTime(double.Parse(record["time"].ToString()));
+                    bhr.Type = "Deposit";
+                    bhr.Id = int.Parse(record["refid"].ToString());
+                    bhr.Currency = "";
+                    bhr.Status = record["status"].ToString();
+                    bhr.Provaider = record["info "].ToString();
+                    bhr.Amount = record["amount"].ToString();
+                    bhr.Account = "";
+                    bhr.Txit = record["txid"].ToString();
+                }
+
+            }
+            else
+            {
+                LastErrorInfo += jsonRezaltArray["error"].ToString();
+                return null;
+            }
+            return rezalt;
         }
 
         public List<KrakenOrder> GetOrdersHistory(BaseCurrencyPair currencyPair, int top_count = -1)
