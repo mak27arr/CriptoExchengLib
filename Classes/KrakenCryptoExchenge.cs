@@ -121,21 +121,20 @@ namespace CriptoExchengLib.Classes
             WebConector wc = new WebConector();
             string api_name = "private/AddOrder";
             Int64 nonce = DateTime.Now.Ticks;
-            
-            string data_transmit = "nonce=" + nonce + Convert.ToChar(0) + "pair=" + order.Pair.PairName + "&" + "type=" + order.Type.Value + "&" + "ordertype=" + ((KrakenOrder)order).Ordertype.Value + "&" + "volume=" + order.Quantity + "&" + "price=" + order.Price;
+            string data_transmit = "nonce=" + nonce + "&pair=" + order.Pair.PairName + "&" + "type=" + order.Type.Value + "&"
+               + "ordertype=" + ((KrakenOrder)order).Ordertype.Value + "&" + "volume=" + order.Quantity + "&" 
+               + "price=" + order.Price;
             var signature = SignatureFormat(api_name, data_transmit, nonce);
             List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
             heder.Add(new Tuple<string, string>("API-Key", Username));
             heder.Add(new Tuple<string, string>("API-Sign", signature));
-            var body = "{pair="+ order.Pair.PairName +"," + "type=" + order.Type.Value + ","
-               + "ordertype=" + ((KrakenOrder)order).Ordertype.Value + "," + "volume=" + order.Quantity + "," 
-                + "price=" + order.Price + "}"; 
-            string jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, body).Result;
+
+            string jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
             var jsonRezaltArray = JObject.Parse(jsonRezalt);
-            if (jsonRezaltArray["result"].ToString() == "true")
+            if (jsonRezaltArray["error"] == null)
             {
                 LastErrorInfo = "";
-                return Int32.Parse(jsonRezaltArray["order_id"].ToString());
+                return Int32.Parse(jsonRezaltArray["txid"].ToString());
             }
             else
             {

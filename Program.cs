@@ -60,8 +60,8 @@ namespace CriptoExchengLib
             ko.Ordertype = KrakenOrderType.Limit;
             ko.Price = 1;
             ko.Quantity = 1;
-            //kc.PostOrder(ko);
-            kc.CanselOrder(10);
+            kc.PostOrder(ko);
+            //kc.CanselOrder(10);
         }
 
         public static void AddOrder(string pair,
