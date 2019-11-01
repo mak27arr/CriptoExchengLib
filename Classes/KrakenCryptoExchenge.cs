@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using CriptoExchengLib.Classes.Helper;
 using CriptoExchengLib.Interfaces;
 using Nancy.Json.Simple;
 using Newtonsoft.Json;
@@ -29,6 +31,34 @@ namespace CriptoExchengLib.Classes
 
         public List<BaseAccount> GetAccountsList()
         {
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return null;
+            }
+            throw new NotImplementedException();
+            WebConector wc = new WebConector();
+            string api_name = "private/Balance";
+            Int64 nonce = DateTime.Now.Ticks;
+            string data_transmit = string.Format("nonce={0}", nonce);
+            var signature = SignatureFormat(api_name, data_transmit, nonce);
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            heder.Add(new Tuple<string, string>("API-Sign", signature));
+
+            var jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
+            var jsonRezaltArray = JArray.Parse(jsonRezalt);
+            if (jsonRezaltArray["error"] == null)
+            {
+                LastErrorInfo = "";
+                BaseOrderStatus bos = BaseOrderStatus.Exsist;
+                return null;
+            }
+            else
+            {
+                LastErrorInfo = jsonRezaltArray["error"].ToString();
+                return null;
+            }
             throw new NotImplementedException();
         }
 
@@ -96,9 +126,90 @@ namespace CriptoExchengLib.Classes
             throw new NotImplementedException();
         }
 
-        public List<BaseOrder> GetOrdersHistory(BaseCurrencyPair currencyPair, int top_count = -1)
+        public List<KrakenOrder> GetOrdersHistory(BaseCurrencyPair currencyPair, int top_count = -1)
         {
-            throw new NotImplementedException();
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return null;
+            }
+
+            List<KrakenOrder> rezalt = new List<KrakenOrder>();
+
+            WebConector wc = new WebConector();
+            string api_name = "private/OpenOrders";
+            Int64 nonce = DateTime.Now.Ticks;
+            string data_transmit = string.Format("nonce={0}", nonce);
+            var signature = SignatureFormat(api_name, data_transmit, nonce);
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            heder.Add(new Tuple<string, string>("API-Sign", signature));
+
+            var jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
+            var jsonRezaltArray = JArray.Parse(jsonRezalt);
+            if (jsonRezaltArray["error"] == null)
+            {
+                LastErrorInfo = "";
+                foreach (JObject record in jsonRezaltArray.Children<JObject>())
+                {
+                    KrakenOrder ko = new KrakenOrder();
+                    BaseOrderStatus os = BaseOrderStatus.Exsist;
+                    os.Value = record["order_id"].ToString().FirstCharToUpper();
+                    ko.Status = os;
+                    ko.Pair = new BaseCurrencyPair(record["descr"]["pair"].ToString());
+                    ko.Type = KrakenOrderType.SetValue(record["descr"]["type"].ToString().FirstCharToUpper());
+                    ko.Ordertype = KrakenOrderType.SetValue(record["descr"]["ordertype"].ToString().FirstCharToUpper());
+                    ko.Price = double.Parse(record["descr"]["price"].ToString());
+                    ko.Quantity = double.Parse(record["vol"].ToString());
+                    ko.OpenTm = UnixTimestampToDateTime(double.Parse(record["opentm "].ToString()));
+                    rezalt.Add(ko);
+                }
+            }
+            else
+            {
+                LastErrorInfo = jsonRezaltArray["error"].ToString();
+            }
+
+            api_name = "private/OpenOrders";
+            nonce = DateTime.Now.Ticks;
+            data_transmit = string.Format("nonce={0}", nonce);
+            signature = SignatureFormat(api_name, data_transmit, nonce);
+            heder = new List<Tuple<string, string>>();
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            heder.Add(new Tuple<string, string>("API-Sign", signature));
+
+            jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
+            jsonRezaltArray = JArray.Parse(jsonRezalt);
+            if (jsonRezaltArray["error"] == null)
+            {
+                foreach (JObject record in jsonRezaltArray.Children<JObject>())
+                {
+                        KrakenOrder ko = new KrakenOrder();
+                        BaseOrderStatus os = BaseOrderStatus.Exsist;
+                        os.Value = record["order_id"].ToString().FirstCharToUpper();
+                        ko.Status = os;
+                        ko.Pair = new BaseCurrencyPair(record["descr"]["pair"].ToString());
+                        ko.Type = KrakenOrderType.SetValue(record["descr"]["type"].ToString().FirstCharToUpper());
+                        ko.Ordertype = KrakenOrderType.SetValue(record["descr"]["ordertype"].ToString().FirstCharToUpper());
+                        ko.Price = double.Parse(record["descr"]["price"].ToString());
+                        ko.Quantity = double.Parse(record["vol"].ToString());
+                        ko.Amount = double.Parse(record["count"].ToString());
+                        ko.OpenTm = UnixTimestampToDateTime(double.Parse(record["opentm "].ToString()));
+                        rezalt.Add(ko);
+                }
+            }
+            else
+            {
+                LastErrorInfo += jsonRezaltArray["error"].ToString();
+            }
+            rezalt = rezalt.Where(x => x.Pair.PairName == currencyPair.PairName).ToList();
+            rezalt.OrderBy(x=>x.OpenTm);
+            return (top_count>0)?rezalt.Take(top_count).ToList():rezalt;
+        }
+
+        List<BaseOrder> ICryptoExchenge.GetOrdersHistory(BaseCurrencyPair currencyPair, int top_count)
+        {
+            return GetOrdersHistory(currencyPair, top_count).Cast<BaseOrder>().ToList();
         }
 
         public IOrderStatus GetOrderStatus(int order_id)
@@ -124,7 +235,7 @@ namespace CriptoExchengLib.Classes
             {
                 LastErrorInfo = "";
                 BaseOrderStatus bos = BaseOrderStatus.Exsist;
-                bos.Value = jsonRezaltArray[order_id]["status"].ToString()
+                bos.Value = jsonRezaltArray[order_id]["status"].ToString();
                 return bos;
             }
             else
@@ -236,7 +347,7 @@ namespace CriptoExchengLib.Classes
             return Convert.ToBase64String(signature);
         }
 
-        public NameValueCollection ToNameValue(object objectItem)
+        private NameValueCollection ToNameValue(object objectItem)
         {
             Type type = objectItem.GetType();
             PropertyInfo[] propertyInfos = type.GetProperties();
@@ -256,6 +367,12 @@ namespace CriptoExchengLib.Classes
             }
             return propNames;
         }
-        
+
+        private static DateTime UnixTimestampToDateTime(double unixTime)
+        {
+            DateTime unixStart = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            long unixTimeStampInTicks = (long)(unixTime * TimeSpan.TicksPerSecond);
+            return new DateTime(unixStart.Ticks + unixTimeStampInTicks, System.DateTimeKind.Utc);
+        }
     }
 }

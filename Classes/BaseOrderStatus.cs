@@ -17,7 +17,7 @@ namespace CriptoExchengLib.Classes
         public static BaseOrderStatus Closed { get { return new BaseOrderStatus("Closed"); } }
         public static BaseOrderStatus Canceled { get { return new BaseOrderStatus("Canceled"); } }
         public static BaseOrderStatus Expired { get { return new BaseOrderStatus("Expired"); } }
-        public static BaseOrderStatus Pending { get { return new BaseOrderStatus("pending"); } }
+        public static BaseOrderStatus Pending { get { return new BaseOrderStatus("Pending"); } }
         public override string ToString()
         {
             return Value;

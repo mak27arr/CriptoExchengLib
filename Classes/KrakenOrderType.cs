@@ -24,7 +24,7 @@ namespace CriptoExchengLib.Classes
         public static KrakenOrderType Trailing_stop_limit { get { return new KrakenOrderType("trailing-stop-limit"); } }
         public static KrakenOrderType Stop_loss_and_limit { get { return new KrakenOrderType("stop-loss-and-limit"); } }
         public static KrakenOrderType Settle_position { get { return new KrakenOrderType("settle-position"); } }
-
+        public static KrakenOrderType Empty { get { return new KrakenOrderType(""); } }
         public static KrakenOrderType SetValue(string value)
         {
             return new KrakenOrderType(value);

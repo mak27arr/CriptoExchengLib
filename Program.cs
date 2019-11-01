@@ -62,7 +62,8 @@ namespace CriptoExchengLib
             //ko.Quantity = 1;
             //kc.PostOrder(ko);
             //kc.CanselOrder(10);
-            kc.GetOrderStatus(10);
+            //kc.GetOrderStatus(10);
+            kc.GetAccountsList();
         }
 
         public static void AddOrder(string pair,

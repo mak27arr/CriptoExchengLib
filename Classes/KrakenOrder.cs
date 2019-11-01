@@ -14,5 +14,7 @@ namespace CriptoExchengLib.Classes
         public IOrderType Type { get; set; }
         public IOrderType Ordertype { get; set; }
         public double Amount { get; set; }
+        public DateTime OpenTm { get; set; }
+        public BaseOrderStatus Status { get; set; }
     }
 }
