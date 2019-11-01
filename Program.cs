@@ -53,15 +53,16 @@ namespace CriptoExchengLib
             kc.SetAutentification("OIav92RTeccxQp4zrM6SH3RN07jEyk3POiPByg/54w1wToBRTtVz3120", "eDxzDp0LL1JQhK+pJF2MYbNz+B/WA203vg76PNtAqnT+zgpURWGO/t/S0aqhO1plyIs3OgNjRaHbk0cwkk6prw==");
             //kc.GetCurrencyPair();
             //kc.GetBookWarrants(cps, 100);
-            AddOrder("ADACAD","buy","limit",1,1,1);
-            KrakenOrder ko = new KrakenOrder();
-            ko.Pair = new BaseCurrencyPair("ADACAD");
-            ko.Type = KrakenOrderType.Buy;
-            ko.Ordertype = KrakenOrderType.Limit;
-            ko.Price = 1;
-            ko.Quantity = 1;
-            kc.PostOrder(ko);
+            //AddOrder("ADACAD","buy","limit",1,1,1);
+            //KrakenOrder ko = new KrakenOrder();
+            //ko.Pair = new BaseCurrencyPair("ADACAD");
+            //ko.Type = KrakenOrderType.Buy;
+            //ko.Ordertype = KrakenOrderType.Limit;
+            //ko.Price = 1;
+            //ko.Quantity = 1;
+            //kc.PostOrder(ko);
             //kc.CanselOrder(10);
+            kc.GetOrderStatus(10);
         }
 
         public static void AddOrder(string pair,

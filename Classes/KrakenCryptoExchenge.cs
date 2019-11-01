@@ -103,7 +103,35 @@ namespace CriptoExchengLib.Classes
 
         public IOrderStatus GetOrderStatus(int order_id)
         {
-            throw new NotImplementedException();
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return null;
+            }
+
+            WebConector wc = new WebConector();
+            string api_name = "private/QueryOrders";
+            Int64 nonce = DateTime.Now.Ticks;
+            string data_transmit = string.Format("nonce={0}&txid={1}", nonce, order_id);
+            var signature = SignatureFormat(api_name, data_transmit, nonce);
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            heder.Add(new Tuple<string, string>("API-Key", Username));
+            heder.Add(new Tuple<string, string>("API-Sign", signature));
+
+            var jsonRezalt = wc.ReqwestPostAsync(string.Format(base_url, api_name), heder, data_transmit).Result;
+            var jsonRezaltArray = JObject.Parse(jsonRezalt);
+            if (jsonRezaltArray["error"] == null)
+            {
+                LastErrorInfo = "";
+                BaseOrderStatus bos = BaseOrderStatus.Exsist;
+                bos.Value = jsonRezaltArray[order_id]["status"].ToString()
+                return bos;
+            }
+            else
+            {
+                LastErrorInfo = jsonRezaltArray["error"].ToString();
+                return null;
+            }
         }
 
         public int PostOrder(IOrder order)

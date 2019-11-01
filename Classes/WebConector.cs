@@ -32,7 +32,6 @@ namespace CriptoExchengLib.Classes
                 StringContent content = new StringContent(body);
                 content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
                 requestMessage.Content = content;
-                //requestMessage.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
                 HttpResponseMessage response = httpClient.SendAsync(requestMessage).Result;
                 return response.Content.ReadAsStringAsync();
             });
