@@ -62,17 +62,18 @@ namespace CriptoExchengLib.Classes
         //
         public List<BaseBookWarrant> GetBookWarrants(List<BaseCurrencyPair> pairs, int limit)
         {
-            if (pairs.Count > 1)
-            {
-                LastErrorInfo = "Suport only one pairs";
-                return new List<BaseBookWarrant>();
-            }
+            //if (pairs.Count > 1)
+            //{
+            //    LastErrorInfo = "Suport only one pairs";
+            //    return new List<BaseBookWarrant>();
+            //}
             WebConector wc = new WebConector();
-            string api_name = "book/";
+            List<BaseBookWarrant> rezalt = new List<BaseBookWarrant>();
             foreach (ICurrencyPair pair in pairs)
             {
+                string api_name = "book/";
                 api_name += pair.PairName;
-            }
+            
             api_name += "/P0";
             if (limit == 25 || limit == 100)
             {
@@ -80,7 +81,7 @@ namespace CriptoExchengLib.Classes
             }
             string jsonRezalt = wc.ReqwestGetAsync(string.Format(base_url, api_name), new List<Tuple<string, string>>(), "").Result;
             var jsonRezaltArray = JArray.Parse(jsonRezalt);
-            List<BaseBookWarrant> rezalt = new List<BaseBookWarrant>();
+            
             if (jsonRezaltArray.Count > 0)
             {
                 foreach (var cp in jsonRezaltArray)
@@ -94,7 +95,7 @@ namespace CriptoExchengLib.Classes
                     rezalt.Add(bookWarrant);
                 }
             }
-
+            }
             return rezalt;
         }
         //
