@@ -2,8 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Linq;
+using CriptoExchengLib.Classes.Helper;
 
 namespace CriptoExchengLib.Classes
 {
@@ -160,6 +159,78 @@ namespace CriptoExchengLib.Classes
 
         public List<BaseHistoryRecord> GetHistoryRecords(DateTime dateTime)
         {
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return new List<BaseHistoryRecord>();
+            }
+            WebConector wc = new WebConector();
+            string api_name = "wapi/v3/depositHistory.html";
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            var jsontimestamp = wc.ReqwestGetAsync(string.Format("{0}/api/v3/time", base_url), new List<Tuple<string, string>>(), "").Result;
+            string timestamp = (JObject.Parse(jsontimestamp))["serverTime"].ToString();
+            heder.Add(new Tuple<string, string>("X-MBX-APIKEY", Username));
+            string data_for_encript = "&startTime=" + dateTime.ToUnixTimestamp() + "&recvWindow=" + "50000" + "&timestamp=" + timestamp;
+            heder.Add(new Tuple<string, string>("signature", SignatureHelper.Sign(Password, data_for_encript, 256)));
+            data_for_encript += "&signature=" + SignatureHelper.Sign(Password, data_for_encript, 256);
+            string jsonRezalt = wc.ReqwestPostAsync(string.Format("{0}{1}", base_url, api_name), heder, data_for_encript).Result;
+            var jarrayRezalt = JObject.Parse(jsonRezalt);
+            var rezalt = new List<BaseHistoryRecord>();
+            if (jarrayRezalt["msg"] == null)
+            {
+                var jsonArrayRecords = JArray.Parse(jarrayRezalt["depositList"].ToString());
+                foreach (var record in jsonArrayRecords) {
+                    BaseHistoryRecord bhr = new BaseHistoryRecord();
+                    bhr.Id = 0;
+                    bhr.Provaider = record["txId"].ToString();
+                    bhr.Status = record["status"].ToString();
+                    bhr.Time = (new DateTime()).FromUnixTimestamp(record["insertTime"].ToObject<Int64>());
+                    bhr.Txit = record["txId"].ToString();
+                    bhr.Type = "deposit";
+                    bhr.Account = record["address"].ToString(); ;
+                    bhr.Amount = record["amount"].ToString(); ;
+                    bhr.Currency = record["asset"].ToString(); ;
+                    rezalt.Add(bhr);
+                }
+            }
+            else
+            {
+                LastErrorInfo = jarrayRezalt["msg"].ToString();
+                return new List<BaseHistoryRecord>();
+            }
+            api_name = "/wapi/v3/withdrawHistory.html";
+            heder = new List<Tuple<string, string>>();
+            jsontimestamp = wc.ReqwestGetAsync(string.Format("{0}/api/v3/time", base_url), new List<Tuple<string, string>>(), "").Result;
+            timestamp = (JObject.Parse(jsontimestamp))["serverTime"].ToString();
+            heder.Add(new Tuple<string, string>("X-MBX-APIKEY", Username));
+            data_for_encript = "&startTime=" + dateTime.ToUnixTimestamp() + "&recvWindow=" + "50000" + "&timestamp=" + timestamp;
+            heder.Add(new Tuple<string, string>("signature", SignatureHelper.Sign(Password, data_for_encript, 256)));
+            data_for_encript += "&signature=" + SignatureHelper.Sign(Password, data_for_encript, 256);
+            jsonRezalt = wc.ReqwestPostAsync(string.Format("{0}{1}", base_url, api_name), heder, data_for_encript).Result;
+            jarrayRezalt = JObject.Parse(jsonRezalt);
+            if (jarrayRezalt["msg"] == null)
+            {
+                var jsonArrayRecords = JArray.Parse(jarrayRezalt["withdrawList"].ToString());
+                foreach (var record in jsonArrayRecords)
+                {
+                    BaseHistoryRecord bhr = new BaseHistoryRecord();
+                    bhr.Id = 0;
+                    bhr.Provaider = record["txId"].ToString();
+                    bhr.Status = record["status"].ToString();
+                    bhr.Time = (new DateTime()).FromUnixTimestamp(record["insertTime"].ToObject<Int64>());
+                    bhr.Txit = record["txId"].ToString();
+                    bhr.Type = "withdraw";
+                    bhr.Account = record["address"].ToString(); ;
+                    bhr.Amount = record["amount"].ToString(); ;
+                    bhr.Currency = record["asset"].ToString(); ;
+                    rezalt.Add(bhr);
+                }
+            }
+            else
+            {
+                LastErrorInfo += jarrayRezalt["msg"].ToString();
+                return new List<BaseHistoryRecord>();
+            }
             throw new NotImplementedException();
         }
 
@@ -182,7 +253,6 @@ namespace CriptoExchengLib.Classes
             heder.Add(new Tuple<string, string>("signature", SignatureHelper.Sign(Password, data_for_encript, 256)));
             data_for_encript += "&signature=" + SignatureHelper.Sign(Password, data_for_encript, 256);
             string jsonRezalt = wc.ReqwestPostAsync(string.Format("{0}{1}", base_url, api_name), heder, data_for_encript).Result;
-            jsonRezalt = "[{\"symbol\": \"LTCBTC\",\"orderId\": 1,\"orderListId\": -1,\"clientOrderId\": \"myOrder1\",\"price\": \"0.1\",\"origQty\": \"1.0\",\"executedQty\": \"0.0\",\"cummulativeQuoteQty\": \"0.0\",\"status\": \"NEW\",\"timeInForce\": \"GTC\",\"type\": \"LIMIT\",\"side\": \"BUY\",\"stopPrice\": \"0.0\",\"icebergQty\": \"0.0\",\"time\": 1499827319559,\"updateTime\": 1499827319559,\"isWorking\": true}]";
             try
             {
                 var jsonRezaltArray = JArray.Parse(jsonRezalt);
