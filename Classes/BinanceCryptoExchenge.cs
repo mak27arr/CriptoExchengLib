@@ -57,7 +57,46 @@ namespace CriptoExchengLib.Classes
 
         public List<BaseAccount> GetAccountsList()
         {
-            throw new NotImplementedException();
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return new List<BaseAccount>();
+            }
+            WebConector wc = new WebConector();
+            string api_name = "/api/v3/account";
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            var jsontimestamp = wc.ReqwestGetAsync(string.Format("{0}/api/v3/time", base_url), new List<Tuple<string, string>>(), "").Result;
+            string timestamp = (JObject.Parse(jsontimestamp))["serverTime"].ToString();
+            heder.Add(new Tuple<string, string>("X-MBX-APIKEY", Username));
+            string data_for_encript = "&timestamp=" + timestamp;
+            heder.Add(new Tuple<string, string>("signature", SignatureHelper.Sign(Password, data_for_encript, 256)));
+            data_for_encript += "&signature=" + SignatureHelper.Sign(Password, data_for_encript, 256);
+            var url_me = string.Format("{0}{1}?{2}", base_url, api_name, data_for_encript);
+            string jsonRezalt = wc.ReqwestGetAsync(string.Format("{0}{1}?{2}", base_url, api_name,data_for_encript), heder, data_for_encript).Result;
+            try
+            {
+                var jsonRezaltArray = JObject.Parse(jsonRezalt);
+                if (jsonRezaltArray["msg"] == null)
+                {
+                    var jsonAccounts = JArray.Parse(jsonRezaltArray["balances"].ToString());
+                    var rezalt = new List<BaseAccount>();
+                    foreach (var json_acc in jsonAccounts)
+                    {
+                        var ba = new BaseAccount(json_acc["asset"].ToString(), json_acc["free"].ToObject<double>());
+                        rezalt.Add(ba);
+                    }
+                    return rezalt;
+                }
+                else
+                {
+                    LastErrorInfo = jsonRezaltArray["msg"].ToString();
+                    return new List<BaseAccount>();
+                }
+            }catch(Exception ex)
+            {
+                LastErrorInfo = jsonRezalt;
+                return new List<BaseAccount>();
+            }
         }
 
         public List<BaseBookWarrant> GetBookWarrants(List<BaseCurrencyPair> pairs, int limit=100)
@@ -124,14 +163,86 @@ namespace CriptoExchengLib.Classes
             throw new NotImplementedException();
         }
 
-        public List<BaseOrder> GetOrdersHistory(BaseCurrencyPair currencyPair, int top_count = -1)
+        public List<BaseOrder> GetOrdersHistory(BaseCurrencyPair currencyPair, int top_count = 100)
         {
-            throw new NotImplementedException();
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return new List<BaseOrder>();
+            }
+            if (top_count > 1000)
+                top_count = 1000;
+            WebConector wc = new WebConector();
+            string api_name = "/api/v3/allOrders";
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            var jsontimestamp = wc.ReqwestGetAsync(string.Format("{0}/api/v3/time", base_url), new List<Tuple<string, string>>(), "").Result;
+            string timestamp = (JObject.Parse(jsontimestamp))["serverTime"].ToString();
+            heder.Add(new Tuple<string, string>("X-MBX-APIKEY", Username));
+            string data_for_encript = "symbol=" + currencyPair.PairName + "&limit=" + top_count + "&recvWindow=" + "50000" + "&timestamp=" + timestamp;
+            heder.Add(new Tuple<string, string>("signature", SignatureHelper.Sign(Password, data_for_encript, 256)));
+            data_for_encript += "&signature=" + SignatureHelper.Sign(Password, data_for_encript, 256);
+            string jsonRezalt = wc.ReqwestPostAsync(string.Format("{0}{1}", base_url, api_name), heder, data_for_encript).Result;
+            jsonRezalt = "[{\"symbol\": \"LTCBTC\",\"orderId\": 1,\"orderListId\": -1,\"clientOrderId\": \"myOrder1\",\"price\": \"0.1\",\"origQty\": \"1.0\",\"executedQty\": \"0.0\",\"cummulativeQuoteQty\": \"0.0\",\"status\": \"NEW\",\"timeInForce\": \"GTC\",\"type\": \"LIMIT\",\"side\": \"BUY\",\"stopPrice\": \"0.0\",\"icebergQty\": \"0.0\",\"time\": 1499827319559,\"updateTime\": 1499827319559,\"isWorking\": true}]";
+            try
+            {
+                var jsonRezaltArray = JArray.Parse(jsonRezalt);
+                LastErrorInfo = "";
+                var rezalt = new List<BaseOrder>();
+                foreach(var order in jsonRezaltArray)
+                {
+                    BaseOrder bo = new BaseOrder();
+                    bo.Id = order["orderId"].ToObject<int>();
+                    bo.Pair = new BaseCurrencyPair(order["symbol"].ToString());
+                    bo.Quantity = order["origQty"].ToObject<double>();
+                    bo.Price = order["price"].ToObject<double>();
+                    bo.Type = BinanceOrderType.SetValue(order["type"].ToString());
+                    bo.Amount = order["executedQty"].ToObject<int>();
+                    rezalt.Add(bo);
+                }
+                return rezalt;
+            }
+            catch(Exception ex)
+            {
+                LastErrorInfo = jsonRezalt;
+                return new List<BaseOrder>();
+            }
         }
 
         public IOrderStatus GetOrderStatus(int order_id)
         {
+            LastErrorInfo = "Set currency pair";
             throw new NotImplementedException();
+        }
+        public IOrderStatus GetOrderStatus(BaseCurrencyPair cp, int order_id)
+        {
+            if (Username == null || Password == null)
+            {
+                LastErrorInfo = "Not Autorizated";
+                return BinanceOrderStatus.Error;
+            }
+            WebConector wc = new WebConector();
+            string api_name = "/api/v3/order";
+            List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
+            var jsontimestamp = wc.ReqwestGetAsync(string.Format("{0}/api/v3/time", base_url), new List<Tuple<string, string>>(), "").Result;
+            string timestamp = (JObject.Parse(jsontimestamp))["serverTime"].ToString();
+            heder.Add(new Tuple<string, string>("X-MBX-APIKEY", Username));
+            string data_for_encript = "symbol=" + cp.PairName + "&orderId=" + order_id + "&timestamp=" + timestamp;
+            heder.Add(new Tuple<string, string>("signature", SignatureHelper.Sign(Password, data_for_encript, 256)));
+            data_for_encript += "&signature=" + SignatureHelper.Sign(Password, data_for_encript, 256);
+            string jsonRezalt = wc.ReqwestGetAsync(string.Format("{0}{1}", base_url, api_name), heder, data_for_encript).Result;
+            var jsonRezaltArray = JObject.Parse(jsonRezalt);
+            if (jsonRezaltArray["msg"] == null)
+            {
+                LastErrorInfo = "";
+                if(jsonRezaltArray["status"] != null)
+                    return BinanceOrderStatus.SetValue(jsonRezaltArray["status"].ToString());
+            }
+            else
+            {
+                LastErrorInfo = jsonRezaltArray["msg"].ToString();
+                return BinanceOrderStatus.NoExsist;
+            }
+            return BinanceOrderStatus.Error;
         }
 
         public int PostOrder(IOrder order)

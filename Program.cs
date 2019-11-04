@@ -80,7 +80,9 @@ namespace CriptoExchengLib
             //bo.Price = 1;
             //bo.TimeInForce = TimeInForce.GTC;
             //bce.PostOrder(bo);
-            bce.CanselOrder(new BaseCurrencyPair("LTCBTC"),10);
+            //bce.CanselOrder(new BaseCurrencyPair("LTCBTC"),10);
+            bce.GetAccountsList();
+            //bce.GetOrdersHistory(new BaseCurrencyPair("LTCBTC"), 100);
         }
 
 
