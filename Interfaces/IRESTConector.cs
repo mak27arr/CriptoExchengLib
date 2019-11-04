@@ -7,7 +7,7 @@ namespace CriptoExchengLib.Interfaces
 {
     public interface IRESTConector
     {
-        Task<string> ReqwestPostAsync(string url,List<Tuple<string,string>> heder,string body);
-        Task<string> ReqwestGetAsync(string url,List<Tuple<string, string>> heder, string bodys);
+        Task<string> ReqwestPostAsync(string url,List<Tuple<string,string>> heder,string body, string content_type);
+        Task<string> ReqwestGetAsync(string url,List<Tuple<string, string>> heder, string bodys, string content_type);
     }
 }

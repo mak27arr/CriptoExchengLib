@@ -146,14 +146,12 @@ namespace CriptoExchengLib.Classes
             List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
             string nonce = ((long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds).ToString();
             string body_jsonstr = "{type:'" + order.Type.Value + "',symbol:'" + order.Pair + "',price:'" + order.Price + "',amount:'" + order.Amount + "',flags:0}";
-            string data_for_encript = "/api/" + api_name + nonce.ToString() + body_jsonstr;
+            string data_for_encript = "/api/" + api_name + nonce + body_jsonstr;
             heder.Add(new Tuple<string, string>("bfx-apikey", Username));
-            heder.Add(new Tuple<string, string>("bfx-signature", SignatureHelper.Sign(Password, data_for_encript,384)));
+            heder.Add(new Tuple<string, string>("bfx-signature", SignatureHelper.Sign(Password, data_for_encript,384).ToLower()));
             heder.Add(new Tuple<string, string>("bfx-nonce", nonce));
-
-           // var body = this.ToNameValue(order);
-            //body.Add("bfx-nonce", nonce);
-            string jsonRezalt = wc.ReqwestPostAsync(string.Format(abase_url, api_name), heder, body_jsonstr).Result;
+            var _url_url = string.Format(abase_url, api_name);
+            string jsonRezalt = wc.ReqwestPostAsync(string.Format(abase_url, api_name), heder, body_jsonstr, "application/json").Result;
             var jsonRezaltArray = JObject.Parse(jsonRezalt);
             if (jsonRezaltArray["error"] != null)
             {

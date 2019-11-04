@@ -17,7 +17,7 @@ namespace CriptoExchengLib.Classes
         protected string password { get; set; }
 
         private HttpClient httpClient = new HttpClient();
-        public async Task<string> ReqwestPostAsync(string url, List<Tuple<string, string>> heder, string body)
+        public async Task<string> ReqwestPostAsync(string url, List<Tuple<string, string>> heder, string body, string content_type = "application/x-www-form-urlencoded")
         {
             httpClient = new HttpClient();
             return await Task.Run(() => {
@@ -30,14 +30,14 @@ namespace CriptoExchengLib.Classes
                     }
                 }
                 StringContent content = new StringContent(body);
-                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(content_type);
                 requestMessage.Content = content;
                 HttpResponseMessage response = httpClient.SendAsync(requestMessage).Result;
                 return response.Content.ReadAsStringAsync();
             });
         }
 
-        public async Task<string> ReqwestDeleteAsync(string url, List<Tuple<string, string>> heder, string body)
+        public async Task<string> ReqwestDeleteAsync(string url, List<Tuple<string, string>> heder, string body,string content_type = "application/x-www-form-urlencoded")
         {
             httpClient = new HttpClient();
             return await Task.Run(() => {
@@ -50,14 +50,14 @@ namespace CriptoExchengLib.Classes
                     }
                 }
                 StringContent content = new StringContent(body);
-                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(content_type);
                 requestMessage.Content = content;
                 HttpResponseMessage response = httpClient.SendAsync(requestMessage).Result;
                 return response.Content.ReadAsStringAsync();
             });
         }
 
-        public async Task<string> ReqwestGetAsync(string url, List<Tuple<string, string>> heder, string body)
+        public async Task<string> ReqwestGetAsync(string url, List<Tuple<string, string>> heder, string body,string content_type = "application/x-www-form-urlencoded")
         {
             httpClient = new HttpClient();
             return await Task.Run(() => {

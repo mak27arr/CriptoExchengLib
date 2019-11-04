@@ -31,19 +31,19 @@ namespace CriptoExchengLib
             //Console.WriteLine(json);
 
             //nead fix error
-            //BitfinexCryptoExchenge bf = new BitfinexCryptoExchenge();
-            //bf.SetAutentification("oxeBAjTBesbrcrhTI8sK5kBqfo09g5P3BT9fBJrtrAp", "pXLRVAgJvPdp2Za9uAQKl3kKN6s5tylrpz8WB0464fU");
+            BitfinexCryptoExchenge bf = new BitfinexCryptoExchenge();
+            bf.SetAutentification("oxeBAjTBesbrcrhTI8sK5kBqfo09g5P3BT9fBJrtrAp", "pXLRVAgJvPdp2Za9uAQKl3kKN6s5tylrpz8WB0464fU");
             //List<BaseCurrencyPair> cps = new List<BaseCurrencyPair>();
             ////BaseCurrencyPair bc = new BaseCurrencyPair("tBTCUSD");
             ////cps.Add(bc);
             ////bf.GetBookWarrants(cps,100);
             ////bf.GetCurrencyPair();
-            //BaseOrder bo = new BaseOrder();
-            //bo.Pair = new BaseCurrencyPair("tBTCUSD");
-            //bo.Price = 0;
-            //bo.Quantity = 0;
-            //bo.Type = BifinexOrderType.Exchange_fok;
-            //bf.PostOrder(bo);
+            BaseOrder bo = new BaseOrder();
+            bo.Pair = new BaseCurrencyPair("tBTCUSD");
+            bo.Price = 0;
+            bo.Quantity = 0;
+            bo.Type = BifinexOrderType.Exchange_fok;
+            bf.PostOrder(bo);
             //bf.CanselOrder(1);
             //Console.ReadKey();
             //List<BaseCurrencyPair> cps = new List<BaseCurrencyPair>();
