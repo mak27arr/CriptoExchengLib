@@ -46,11 +46,11 @@ namespace CriptoExchengLib
             //bf.PostOrder(bo);
             //bf.CanselOrder(1);
             //Console.ReadKey();
-            List<BaseCurrencyPair> cps = new List<BaseCurrencyPair>();
-            BaseCurrencyPair cp = new BaseCurrencyPair("ADACAD");
-            cps.Add(cp);
-            KrakenCryptoExchenge kc = new KrakenCryptoExchenge();
-            kc.SetAutentification("OIav92RTeccxQp4zrM6SH3RN07jEyk3POiPByg/54w1wToBRTtVz3120", "eDxzDp0LL1JQhK+pJF2MYbNz+B/WA203vg76PNtAqnT+zgpURWGO/t/S0aqhO1plyIs3OgNjRaHbk0cwkk6prw==");
+            //List<BaseCurrencyPair> cps = new List<BaseCurrencyPair>();
+            //BaseCurrencyPair cp = new BaseCurrencyPair("ADACAD");
+            //cps.Add(cp);
+            //KrakenCryptoExchenge kc = new KrakenCryptoExchenge();
+            //kc.SetAutentification("OIav92RTeccxQp4zrM6SH3RN07jEyk3POiPByg/54w1wToBRTtVz3120", "eDxzDp0LL1JQhK+pJF2MYbNz+B/WA203vg76PNtAqnT+zgpURWGO/t/S0aqhO1plyIs3OgNjRaHbk0cwkk6prw==");
             //kc.GetCurrencyPair();
             //kc.GetBookWarrants(cps, 100);
             //AddOrder("ADACAD","buy","limit",1,1,1);
@@ -63,46 +63,26 @@ namespace CriptoExchengLib
             //kc.PostOrder(ko);
             //kc.CanselOrder(10);
             //kc.GetOrderStatus(10);
-            kc.GetAccountsList();
+            // kc.GetAccountsList();
+
+            BinanceCryptoExchenge bce = new BinanceCryptoExchenge();
+            bce.SetAutentification("IYTZ2ugTwRN3FjfGSWc7GXkiR4unBiPhLtTlx31oUWfAnAvmW6VCj8r9fqYO878k", "g4VYUr1TCGfQLNhq0jSAtFCsXbgLww7Xjjd9BFrleFCi1TeRK2DD26WFZdrknCiu");
+            //List<BaseCurrencyPair> cps = new List<BaseCurrencyPair>();
+            //BaseCurrencyPair bc = new BaseCurrencyPair("BNBBTC");
+            //cps.Add(bc);
+            //bce.GetBookWarrants(cps,500);
+            //bce.GetCurrencyPair();
+            //BinanceOrder bo = new BinanceOrder();
+            //bo.Pair = new BaseCurrencyPair("LTCBTC");
+            //bo.Side = BinanceOrderType.Buy;
+            //bo.Type = BinanceOrderType.Limit;
+            //bo.Quantity = 1;
+            //bo.Price = 1;
+            //bo.TimeInForce = TimeInForce.GTC;
+            //bce.PostOrder(bo);
+            bce.CanselOrder(new BaseCurrencyPair("LTCBTC"),10);
         }
 
-        public static void AddOrder(string pair,
-           string type,
-           string ordertype,
-           decimal volume,
-           decimal? price,
-           decimal? price2,
-           string leverage = "none",
-           string position = "",
-           string oflags = "",
-           string starttm = "",
-           string expiretm = "",
-           string userref = "",
-           bool validate = false,
-           Dictionary<string, string> close = null)
-        {
-            string reqs = string.Format("&pair={0}&type={1}&ordertype={2}&volume={3}&leverage={4}", pair, type, ordertype, volume, leverage);
-            if (price.HasValue)
-                reqs += string.Format("&price={0}", price.Value);
-            if (price2.HasValue)
-                reqs += string.Format("&price2={0}", price2.Value);
-            if (!string.IsNullOrEmpty(position))
-                reqs += string.Format("&position={0}", position);
-            if (!string.IsNullOrEmpty(starttm))
-                reqs += string.Format("&starttm={0}", starttm);
-            if (!string.IsNullOrEmpty(expiretm))
-                reqs += string.Format("&expiretm={0}", expiretm);
-            if (!string.IsNullOrEmpty(oflags))
-                reqs += string.Format("&oflags={0}", oflags);
-            if (!string.IsNullOrEmpty(userref))
-                reqs += string.Format("&userref={0}", userref);
-            if (validate)
-                reqs += "&validate=true";
-            if (close != null)
-            {
-                string closeString = string.Format("&close[ordertype]={0}&close[price]={1}&close[price2]={2}", close["ordertype"], close["price"], close["price2"]);
-                reqs += closeString;
-            }
-        }
+
     }
 }

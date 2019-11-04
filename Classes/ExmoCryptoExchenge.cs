@@ -12,10 +12,7 @@ namespace CriptoExchengLib.Classes
         private string base_url;
         public string Username { get; set; }
         public string Password { get; set; }
-        public string LastErrorInfo { get; protected set; }
-        string ICryptoExchenge.Username { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        string ICryptoExchenge.Password { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        string ICryptoExchenge.LastErrorInfo { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public string LastErrorInfo { get; set; }
 
         public ExmoCryptoExchenge()
         {
