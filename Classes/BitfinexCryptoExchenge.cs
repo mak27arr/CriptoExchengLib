@@ -169,7 +169,10 @@ namespace CriptoExchengLib.Classes
 
         public bool PostOrders(List<IOrder> orders)
         {
-            throw new NotImplementedException();
+            foreach (var order in orders)
+                if (PostOrder(order) < 0)
+                    return false;
+            return true;
         }
 
         public bool SetAutentification(string user, string password)
