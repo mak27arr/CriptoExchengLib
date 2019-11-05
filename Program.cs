@@ -32,7 +32,7 @@ namespace CriptoExchengLib
 
             //nead fix error
             BitfinexCryptoExchenge bf = new BitfinexCryptoExchenge();
-            bf.SetAutentification("oxeBAjTBesbrcrhTI8sK5kBqfo09g5P3BT9fBJrtrAp", "pXLRVAgJvPdp2Za9uAQKl3kKN6s5tylrpz8WB0464fU");
+            bf.SetAutentification("Za8bnEr09Q45b6y5Ri7fq71UKoCHByMR7LMr4XqRO9g", "zI3lrqhbNUXTxHaxui3w816Tl3WxorgtrZPqHKml3e1");
             //List<BaseCurrencyPair> cps = new List<BaseCurrencyPair>();
             ////BaseCurrencyPair bc = new BaseCurrencyPair("tBTCUSD");
             ////cps.Add(bc);

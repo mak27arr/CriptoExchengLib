@@ -145,13 +145,14 @@ namespace CriptoExchengLib.Classes
             string api_name = "auth/w/order/submit";
             List<Tuple<string, string>> heder = new List<Tuple<string, string>>();
             string nonce = ((long)(DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds).ToString();
-            string body_jsonstr = "{type:'" + order.Type.Value + "',symbol:'" + order.Pair + "',price:'" + order.Price + "',amount:'" + order.Amount + "',flags:0}";
+            //string body_jsonstr = "{type:'" + order.Type.Value + "',symbol:'" + order.Pair + "',price:'" + order.Price + "',amount:'" + order.Amount + "',flags:0}";
+            string body_jsonstr = "type=" + order.Type.Value + "&symbol=" + order.Pair + "&price=" + order.Price + "&amount=" + order.Amount + "&flags=0";
             string data_for_encript = "/api/" + api_name + nonce + body_jsonstr;
-            heder.Add(new Tuple<string, string>("bfx-apikey", Username));
-            heder.Add(new Tuple<string, string>("bfx-signature", SignatureHelper.Sign(Password, data_for_encript,384).ToLower()));
-            heder.Add(new Tuple<string, string>("bfx-nonce", nonce));
+            heder.Add(new Tuple<string, string>("bfx-apikey", Encoding.UTF8.GetString(Encoding.Default.GetBytes(Username))));
+            heder.Add(new Tuple<string, string>("bfx-signature", Encoding.UTF8.GetString(Encoding.Default.GetBytes(SignatureHelper.Sign(Password, data_for_encript,384)))));
+            heder.Add(new Tuple<string, string>("bfx-nonce", Encoding.UTF8.GetString(Encoding.Default.GetBytes(nonce))));
             var _url_url = string.Format(abase_url, api_name);
-            string jsonRezalt = wc.ReqwestPostAsync(string.Format(abase_url, api_name), heder, body_jsonstr, "application/json").Result;
+            string jsonRezalt = wc.ReqwestPostAsync(string.Format(abase_url, api_name), heder, body_jsonstr, "application/x-www-form-urlencoded").Result;
             var jsonRezaltArray = JObject.Parse(jsonRezalt);
             if (jsonRezaltArray["error"] != null)
             {
